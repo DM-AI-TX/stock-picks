@@ -1,0 +1,35 @@
+name: Daily Stock Pipeline
+
+on:
+  schedule:
+    # 21:30 UTC = 4:30pm ET during daylight saving, 5:30pm ET during standard
+    # time. Adjust as needed — GitHub Actions cron is UTC-only and doesn't
+    # shift with DST, so revisit this twice a year or pick a slightly later
+    # time that's safe either way.
+    - cron: "30 21 * * 1-5" # Mon-Fri only (no weekends, markets are closed)
+  workflow_dispatch: {} # allows manual runs from the Actions tab
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Run daily pipeline
+        run: npm run pipeline
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
