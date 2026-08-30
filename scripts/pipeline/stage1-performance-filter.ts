@@ -1,1 +1,28 @@
-import { getBatchQuotes } from "./lib/fmp-client"; import { DIVIDEND_UNIVERSE } from "./lib/dividend-universe"; import type { PerformanceFiltered } from "./lib/types"; export async function runPerformanceFilter(): Promise<PerformanceFiltered[]> { const quotes = await getBatchQuotes(DIVIDEND_UNIVERSE); const filtered: PerformanceFiltered[] = []; for (const stock of quotes) { const changesPercentage = Number(stock.changesPercentage ?? 0); const performanceScore = changesPercentage; const passesPlaceholderThreshold = true; if (!passesPlaceholderThreshold) continue; filtered.push({ ticker: String(stock.symbol), companyName: String(stock.name ?? ""), price: Number(stock.price ?? 0), marketCap: Number(stock.marketCap ?? 0), changesPercentage, performanceScore, }); } return filtered; }
+import { getQuotesForUniverse } from "./lib/finnhub-client";
+import { DIVIDEND_UNIVERSE } from "./lib/dividend-universe";
+import type { PerformanceFiltered } from "./lib/types";
+
+export async function runPerformanceFilter(): Promise<PerformanceFiltered[]> {
+  const quotes = await getQuotesForUniverse(DIVIDEND_UNIVERSE);
+
+  const filtered: PerformanceFiltered[] = [];
+
+  for (const { symbol, quote } of quotes) {
+    const changesPercentage = quote.dp ?? 0;
+    const performanceScore = changesPercentage;
+
+    const passesPlaceholderThreshold = true;
+    if (!passesPlaceholderThreshold) continue;
+
+    filtered.push({
+      ticker: symbol,
+      companyName: symbol,
+      price: quote.c ?? 0,
+      marketCap: 0,
+      changesPercentage,
+      performanceScore,
+    });
+  }
+
+  return filtered;
+}
