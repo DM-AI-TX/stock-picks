@@ -34,7 +34,7 @@ async function main() {
     const topPicks = stage3Results.slice(0, 10);
 
     console.log("Writing scores to Supabase...");
-    const { error: insertError } = await supabase.from("scores").insert(
+    const { error: insertError } = await supabase.from("scores").upsert(
       stage3Results.map((s) => ({
         run_date: runDate,
         ticker: s.ticker,
@@ -45,7 +45,8 @@ async function main() {
         price_level_score: s.priceLevelScore,
         composite_score: s.compositeScore,
         details: s.details,
-      }))
+      })),
+      { onConflict: "run_date,ticker,algorithm_version" }
     );
     if (insertError) throw insertError;
 
