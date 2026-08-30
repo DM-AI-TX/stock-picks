@@ -39,12 +39,7 @@ async function fmpGet<T>(path: string, params: Record<string, string> = {}): Pro
  * TODO: tune query params (marketCapMoreThan, volumeMoreThan, etc.) to match
  * whatever "universe" you want to start from.
  */
-export async function getScreenerUniverse(params: Record<string, string> = {}) {
-  return fmpGet<Array<Record<string, unknown>>>("/stock-screener", {
-    limit: "1000",
-    ...params,
-  });
-}
+export async function getScreenerUniverse(params: Record<string, string> = {}) { const apiKey = requireApiKey(); const url = new URL("https://financialmodelingprep.com/stable/company-screener"); url.searchParams.set("limit", "1000"); for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v); url.searchParams.set("apikey", apiKey); const res = await fetch(url.toString()); if (!res.ok) { throw new Error(`FMP request failed (${res.status}): /company-screener`); } return res.json() as Promise<Array<Record<string, unknown>>>; }
 
 /**
  * Batch quote lookup — pass up to ~100 tickers comma-separated in a single call.
