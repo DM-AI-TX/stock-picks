@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { supabase } from "@/lib/supabase";
 
 // TODO: this is a bare-bones placeholder. Build out real UI — watchlists,
