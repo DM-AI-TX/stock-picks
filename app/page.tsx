@@ -35,6 +35,10 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
+        <span className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          {latestDate ? `Last run ${latestDate}` : "No runs yet"}
+        </span>
+      </div>
 
       {picks.length === 0 ? (
         <p>No picks yet — the pipeline hasn't run, or hasn't written results.</p>
