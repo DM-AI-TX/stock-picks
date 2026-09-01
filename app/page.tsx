@@ -25,7 +25,7 @@ export default async function HomePage() {
     <main style={{ padding: "32px 40px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 36 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <img src="/logo.png" alt="TradeVora" style={{ height: 84, width: "auto" }} />
+          <img src="/logo.png" alt="TradeVaya" style={{ height: 84, width: "auto" }} />
           <div>
             <div className="voice" style={{ fontSize: 52, fontWeight: 500, lineHeight: 1.1 }}>
               TradeVora
