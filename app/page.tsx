@@ -28,7 +28,7 @@ export default async function HomePage() {
           <img src="/logo.png" alt="TradeVaya" style={{ height: 84, width: "auto" }} />
           <div>
             <div className="voice" style={{ fontSize: 52, fontWeight: 500, lineHeight: 1.1 }}>
-              TradeVora
+              TradeVaya
             </div>
             <div className="voice" style={{ fontSize: 14, color: "var(--text-muted)", fontStyle: "italic" }}>
               Refine your edge. Devour the markets.
