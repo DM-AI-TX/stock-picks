@@ -11,10 +11,10 @@ export default async function HomePage() {
     .from("scores")
     .select("*")
     .order("run_date", { ascending: false })
-    .order("composite_score", { ascending: false })
-    .limit(10);
+    .order("composite_score", { ascending: false });
 
   const picks = scores ?? [];
+  const topPicks = picks.slice(0, 10);
   const avgYield = picks.length
     ? picks.reduce((sum, p) => sum + (p.dividend_yield ?? 0), 0) / picks.length
     : 0;
@@ -44,7 +44,7 @@ export default async function HomePage() {
             ]}
           />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 32 }}>
-            <PicksTable picks={picks} />
+            <PicksTable picks={topPicks} />
             <div>
               <ExDivCalendar />
               <EconCalendar />
