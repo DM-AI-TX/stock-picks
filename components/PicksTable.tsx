@@ -11,7 +11,7 @@ export function PicksTable({ picks }: { picks: Pick[] }) {
 
   return (
     <div>
-      <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 14 }}>Today's top picks</div>
+      <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 14 }}>Today's Top Picks</div>
       <div className="panel" style={{ overflow: "hidden" }}>
         <table>
           <thead>
