@@ -24,9 +24,18 @@ export default async function HomePage() {
   return (
     <main style={{ padding: "32px 40px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 36 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 22, height: 22, background: "var(--gold)", borderRadius: 4 }} />
-          <span className="voice" style={{ fontSize: 22, fontWeight: 500 }}>Compound</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <svg width="34" height="34" viewBox="0 0 36 36" fill="none">
+            <path d="M18 3 L30 30 Q18 20 6 30 Z" fill="var(--gold)" />
+          </svg>
+          <div>
+            <div className="voice" style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.1 }}>
+              TradeVora
+            </div>
+            <div className="voice" style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>
+              Refine your edge. Devour the markets.
+            </div>
+          </div>
         </div>
         <span className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>
           {latestDate ? `Last run ${latestDate}` : "No runs yet"}
