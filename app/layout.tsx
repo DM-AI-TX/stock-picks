@@ -20,7 +20,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata = {
-  title: "TradeVora",
+  title: "TradeVaya",
   description: "Refine your edge. Devour the markets.",
 };
 
