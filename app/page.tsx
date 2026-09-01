@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 import { supabase } from "@/lib/supabase";
 import { StatStrip } from "@/components/StatStrip";
 import { PicksTable } from "@/components/PicksTable";
-import { ExDivCalendar } from "@/components/ExDivCalendar";
 import { EconCalendar } from "@/components/EconCalendar";
+import { MarketHolidays } from "@/components/MarketHolidays";
 
 export default async function HomePage() {
   const { data: scores } = await supabase
@@ -31,12 +31,12 @@ export default async function HomePage() {
               TradeVaya
             </div>
             <div className="voice" style={{ fontSize: 14, color: "var(--text-muted)", fontStyle: "italic" }}>
-              Refine your edge. Devour the markets.
+              Refine Your Edge. Devour The Markets.
             </div>
           </div>
         </div>
         <span className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>
-          {latestDate ? `Last run ${latestDate}` : "No runs yet"}
+          {latestDate ? `Last Run ${latestDate}` : "No Runs Yet"}
         </span>
       </div>
 
@@ -46,17 +46,17 @@ export default async function HomePage() {
         <>
           <StatStrip
             stats={[
-              { label: "Stocks tracked", value: String(picks.length) },
-              { label: "Passed today's screen", value: String(picks.length) },
-              { label: "Top score", value: picks[0].composite_score.toFixed(2) },
-              { label: "Avg dividend yield", value: `${avgYield.toFixed(1)}%` },
+              { label: "Stocks Tracked", value: String(picks.length) },
+              { label: "Passed Today's Screen", value: String(picks.length) },
+              { label: "Top Score", value: picks[0].composite_score.toFixed(2) },
+              { label: "Avg Dividend Yield", value: `${avgYield.toFixed(1)}%` },
             ]}
           />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 32 }}>
             <PicksTable picks={topPicks} />
             <div>
-              <ExDivCalendar />
               <EconCalendar />
+              <MarketHolidays />
             </div>
           </div>
         </>
