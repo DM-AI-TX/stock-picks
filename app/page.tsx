@@ -24,13 +24,13 @@ export default async function HomePage() {
   return (
     <main style={{ padding: "32px 40px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 36 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src="/logo.png" alt="TradeVora" style={{ height: 40, width: "auto" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <img src="/logo.png" alt="TradeVora" style={{ height: 84, width: "auto" }} />
           <div>
-            <div className="voice" style={{ fontSize: 30, fontWeight: 500, lineHeight: 1.1 }}>
+            <div className="voice" style={{ fontSize: 52, fontWeight: 500, lineHeight: 1.1 }}>
               TradeVora
             </div>
-            <div className="voice" style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>
+            <div className="voice" style={{ fontSize: 14, color: "var(--text-muted)", fontStyle: "italic" }}>
               Refine your edge. Devour the markets.
             </div>
           </div>
