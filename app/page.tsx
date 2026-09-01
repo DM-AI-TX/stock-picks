@@ -13,7 +13,9 @@ export default async function HomePage() {
     .order("run_date", { ascending: false })
     .order("composite_score", { ascending: false });
 
-  const picks = scores ?? [];
+  const allRows = scores ?? [];
+  const latestDate = allRows[0]?.run_date;
+  const picks = latestDate ? allRows.filter((r) => r.run_date === latestDate) : [];
   const topPicks = picks.slice(0, 10);
   const avgYield = picks.length
     ? picks.reduce((sum, p) => sum + (p.dividend_yield ?? 0), 0) / picks.length
@@ -27,7 +29,7 @@ export default async function HomePage() {
           <span className="voice" style={{ fontSize: 22, fontWeight: 500 }}>Compound</span>
         </div>
         <span className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>
-          {picks[0]?.run_date ? `Last run ${picks[0].run_date}` : "No runs yet"}
+          {latestDate ? `Last run ${latestDate}` : "No runs yet"}
         </span>
       </div>
 
