@@ -1,8 +1,8 @@
 :root {
   --bg: #12151A;
-  --panel: #1A1E24;
-  --border: #262B33;
-  --border-soft: #1B1E24;
+  --panel: #1B2028;
+  --border: #2A2F38;
+  --border-soft: #232830;
   --text: #E8E6E1;
   --text-muted: #8A8F98;
   --text-faint: #5B5F66;
@@ -36,6 +36,7 @@ table {
 }
 
 .panel {
+  background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 8px;
 }
@@ -50,5 +51,5 @@ table {
 }
 
 .pickrow:hover {
-  background: #1F2329;
+  background: #232A33;
 }
