@@ -20,8 +20,8 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata = {
-  title: "Compound",
-  description: "Daily dividend stock picks, scored and delivered.",
+  title: "TradeVora",
+  description: "Refine your edge. Devour the markets.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
