@@ -41,6 +41,7 @@ async function main() {
         company_name: s.companyName,
         performance_score: s.performanceScore,
         dividend_yield: s.dividendYield,
+        price: s.price,
         payout_ratio: s.payoutRatio,
         price_level_score: s.priceLevelScore,
         composite_score: s.compositeScore,
