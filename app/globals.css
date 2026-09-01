@@ -1,0 +1,54 @@
+:root {
+  --bg: #12151A;
+  --panel: #1A1E24;
+  --border: #262B33;
+  --border-soft: #1B1E24;
+  --text: #E8E6E1;
+  --text-muted: #8A8F98;
+  --text-faint: #5B5F66;
+  --gold: #C9973F;
+  --green: #3FB88F;
+  --red: #E5484D;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), sans-serif;
+  margin: 0;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.voice {
+  font-family: var(--font-voice), serif;
+}
+
+.mono {
+  font-family: var(--font-mono), monospace;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.panel-row {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.panel-row:last-child {
+  border-bottom: none;
+}
+
+.pickrow:hover {
+  background: #1F2329;
+}
