@@ -24,12 +24,10 @@ export default async function HomePage() {
   return (
     <main style={{ padding: "32px 40px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 36 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <svg width="34" height="34" viewBox="0 0 36 36" fill="none">
-            <path d="M18 3 L30 30 Q18 20 6 30 Z" fill="var(--gold)" />
-          </svg>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <img src="/logo.png" alt="TradeVora" style={{ height: 40, width: "auto" }} />
           <div>
-            <div className="voice" style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.1 }}>
+            <div className="voice" style={{ fontSize: 30, fontWeight: 500, lineHeight: 1.1 }}>
               TradeVora
             </div>
             <div className="voice" style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>
@@ -37,10 +35,6 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
-        <span className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>
-          {latestDate ? `Last run ${latestDate}` : "No runs yet"}
-        </span>
-      </div>
 
       {picks.length === 0 ? (
         <p>No picks yet — the pipeline hasn't run, or hasn't written results.</p>
