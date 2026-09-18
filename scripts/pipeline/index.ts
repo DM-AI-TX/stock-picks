@@ -1,12 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
-import { runPerformanceFilter } from "./stage1-performance-filter";
+import { runHardFilters } from "./stage1-hard-filters";
 import { runDividendFilter } from "./stage2-dividend-filter";
 import { runDetailScoring } from "./stage3-detail-scoring";
 import { runNotifications } from "./stage4-notify";
 
 /**
- * Entry point for the daily pipeline. Run via `npm run pipeline` locally,
- * or by the GitHub Actions workflow in .github/workflows/daily-pipeline.yml.
+ * Entry point for the pipeline. Run via `npm run pipeline` locally, or by
+ * the GitHub Actions workflow in .github/workflows/daily-pipeline.yml
+ * (which despite the filename now runs weekly, Monday mornings).
  */
 async function main() {
   const supabase = createClient(
@@ -18,8 +19,8 @@ async function main() {
   await supabase.from("pipeline_runs").insert({ run_date: runDate, status: "running" });
 
   try {
-    console.log("Stage 1: performance filter...");
-    const stage1Results = await runPerformanceFilter();
+    console.log("Stage 1: hard filters...");
+    const stage1Results = await runHardFilters();
     console.log(`  -> ${stage1Results.length} stocks survived.`);
 
     console.log("Stage 2: dividend filter...");
@@ -30,7 +31,6 @@ async function main() {
     const stage3Results = await runDetailScoring(stage2Results);
     console.log(`  -> Scored ${stage3Results.length} stocks.`);
 
-    // TODO: decide how many "top picks" to store/notify on — top 10? top 5%?
     const topPicks = stage3Results.slice(0, 10);
 
     console.log("Writing scores to Supabase...");
@@ -39,13 +39,12 @@ async function main() {
         run_date: runDate,
         ticker: s.ticker,
         company_name: s.companyName,
-        performance_score: s.performanceScore,
+        performance_score: 0,
         dividend_yield: s.dividendYield,
-        price: s.price,
         payout_ratio: s.payoutRatio,
         price_level_score: s.priceLevelScore,
         composite_score: s.compositeScore,
-        details: s.details,
+        details: { ...s.details, exDivDate: s.exDivDate, exchange: s.exchange },
       })),
       { onConflict: "run_date,ticker,algorithm_version" }
     );
