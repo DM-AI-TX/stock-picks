@@ -1,17 +1,18 @@
-name: Daily Stock Pipeline
+name: Weekly Stock Pipeline
 
 on:
   schedule:
-    # 21:30 UTC = 4:30pm ET during daylight saving, 5:30pm ET during standard
-    # time. Adjust as needed — GitHub Actions cron is UTC-only and doesn't
-    # shift with DST, so revisit this twice a year or pick a slightly later
-    # time that's safe either way.
-    - cron: "30 21 * * 1-5" # Mon-Fri only (no weekends, markets are closed)
-  workflow_dispatch: {} # allows manual runs from the Actions tab
+    # 12:00 UTC Monday = 7-8am ET depending on daylight saving. Adjust the
+    # hour if you want it running at a different time of day -- it no
+    # longer needs to be tied to market close since this is a weekly
+    # planning run, not an end-of-day one.
+    - cron: "0 12 * * 1"
+  workflow_dispatch: {}
 
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -21,13 +22,13 @@ jobs:
 
       - run: npm install
 
-      - name: Run daily pipeline
+      - name: Run pipeline
         run: npm run pipeline
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }} 
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
