@@ -24,6 +24,10 @@ const MIN_MARKET_CAP_MILLIONS = 2_000; // $2B. No upper bound enforced -- spec i
  *
  * Logs a count after each sub-filter so a run's console output shows
  * exactly where candidates got dropped, rather than just a final total.
+ * Earnings timing additionally breaks down exclusions by reason ("no
+ * earnings data" vs. too close to last/next release), since a filter this
+ * aggressive could mean either the rule is doing its job or Finnhub's
+ * free-tier coverage is too thin to trust -- the breakdown tells us which.
  */
 export async function runHardFilters(): Promise<PerformanceFiltered[]> {
   const [universe, upcomingCandidates] = await Promise.all([
@@ -114,6 +118,32 @@ export async function runHardFilters(): Promise<PerformanceFiltered[]> {
     `  Phase B - earnings timing: ${finalSurvivors.length}/${afterLiquidity.length} survived` +
       ` (dropped: ${afterLiquidity.length - finalSurvivors.length})`
   );
+
+  // Break down WHY the excluded ones were excluded -- distinguishes "no
+  // earnings data" (a Finnhub coverage gap) from genuine too-close-to-
+  // earnings exclusions (the filter working as intended).
+  const excluded = afterLiquidity.filter(
+    (s) => earningsBySymbol.get(s.ticker)?.passesEarningsFilter !== true
+  );
+  if (excluded.length > 0) {
+    const reasonCounts = new Map<string, number>();
+    for (const s of excluded) {
+      const reason = earningsBySymbol.get(s.ticker)?.reason ?? "unknown";
+      reasonCounts.set(reason, (reasonCounts.get(reason) ?? 0) + 1);
+    }
+    console.log("  Phase B - earnings timing exclusion reasons:");
+    for (const [reason, count] of reasonCounts) {
+      console.log(`    ${reason}: ${count}`);
+    }
+    // Also list the tickers with no data at all, since that's the case
+    // most likely to indicate a coverage gap rather than a real exclusion.
+    const noDataTickers = excluded
+      .filter((s) => earningsBySymbol.get(s.ticker)?.reason === "no earnings data")
+      .map((s) => s.ticker);
+    if (noDataTickers.length > 0) {
+      console.log(`    (no earnings data for: ${noDataTickers.join(", ")})`);
+    }
+  }
 
   // --- Assemble enriched PerformanceFiltered objects, reusing every data
   // point already fetched above instead of refetching in later phases. ---
