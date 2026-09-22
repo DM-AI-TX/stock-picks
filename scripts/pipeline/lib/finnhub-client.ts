@@ -123,14 +123,17 @@ export interface FinnhubHistoricalEarning {
 }
 
 /**
- * Confirmed past earnings reports for a symbol, most recent first. Free
- * tier reliably includes historical data here -- unlike /calendar/earnings,
- * which in practice often returns upcoming/estimated dates but comes back
- * empty for the past side on many small/mid-cap tickers.
+ * Confirmed past earnings reports for a symbol, most recent first.
+ *
+ * IMPORTANT: unlike /calendar/earnings, this endpoint returns a BARE ARRAY
+ * at the top level, not an object with an earningsCalendar key -- e.g.
+ * [{ "actual": 2.56, "estimate": 2.38, "period": "2019-03-31", "symbol": "AAPL" }, ...]
+ * Parsing this as { earningsCalendar: [...] } (the /calendar/earnings shape)
+ * silently returns undefined/empty every time, which is what caused every
+ * candidate to show "no past earnings date found" in the first attempt at
+ * this fix.
  */
 export async function getHistoricalEarnings(symbol: string): Promise<FinnhubHistoricalEarning[]> {
-  const data = await finnhubGet<{ earningsCalendar?: FinnhubHistoricalEarning[] }>("/stock/earnings", {
-    symbol,
-  });
-  return data.earningsCalendar ?? [];
+  const data = await finnhubGet<FinnhubHistoricalEarning[]>("/stock/earnings", { symbol });
+  return Array.isArray(data) ? data : [];
 }
