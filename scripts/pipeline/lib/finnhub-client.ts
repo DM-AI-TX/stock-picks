@@ -115,3 +115,22 @@ export async function getEarningsCalendar(
   });
   return data.earningsCalendar ?? [];
 }
+
+export interface FinnhubHistoricalEarning {
+  period: string; // YYYY-MM-DD, the confirmed report date
+  actual: number | null;
+  estimate: number | null;
+}
+
+/**
+ * Confirmed past earnings reports for a symbol, most recent first. Free
+ * tier reliably includes historical data here -- unlike /calendar/earnings,
+ * which in practice often returns upcoming/estimated dates but comes back
+ * empty for the past side on many small/mid-cap tickers.
+ */
+export async function getHistoricalEarnings(symbol: string): Promise<FinnhubHistoricalEarning[]> {
+  const data = await finnhubGet<{ earningsCalendar?: FinnhubHistoricalEarning[] }>("/stock/earnings", {
+    symbol,
+  });
+  return data.earningsCalendar ?? [];
+}
