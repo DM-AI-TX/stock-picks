@@ -10,11 +10,22 @@ export interface HardFilterSurvivor extends UniverseStock {
   indicatedAnnualDividend: number | null;
 }
 
-// Stage 1 currently only implements the exchange/common-stock and
-// ex-div-within-2-weeks hard filters. Market cap, earnings timing, and
-// dividend-frequency classification are added in a later phase -- this
-// type will grow then.
-export type PerformanceFiltered = HardFilterSurvivor;
+// Phase B hard filters (dividend frequency, market cap, liquidity, earnings
+// timing) all run after the Phase A filters above. The underlying data for
+// each is expensive enough (metered Finnhub/Twelve Data calls) that Phase
+// C/D reuse it rather than refetching -- so it's carried on
+// PerformanceFiltered rather than discarded once the pass/fail check runs.
+export type QualifyingDividendFrequency = "quarterly" | "semi-annual" | "annual";
+
+export interface PerformanceFiltered extends HardFilterSurvivor {
+  dividendFrequency: QualifyingDividendFrequency;
+  historicalExDivCount: number;
+  marketCapMillions: number;
+  avgDollarVolume20d: number | null;
+  avgDollarVolume30d: number | null;
+  mostRecentEarningsDate: string | null;
+  nextEarningsDate: string | null;
+}
 
 export interface DividendFiltered extends PerformanceFiltered {
   dividendYield: number;
