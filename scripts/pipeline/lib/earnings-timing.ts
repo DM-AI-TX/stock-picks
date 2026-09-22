@@ -1,4 +1,4 @@
-import { getEarningsCalendar } from "./finnhub-client";
+import { getEarningsCalendar, getHistoricalEarnings } from "./finnhub-client";
 
 const TRADING_DAYS_BUFFER = 15;
 
@@ -30,24 +30,38 @@ export interface EarningsTimingResult {
 
 /**
  * Most recent earnings release >=15 trading days before today, and next
- * expected release >=15 trading days after the ex-div date. Fails soft
- * (excludes the candidate) if Finnhub has no data, since free-tier
- * earnings-calendar coverage is uneven across smaller names.
+ * expected release >=15 trading days after the ex-div date.
+ *
+ * Past earnings come from /stock/earnings (confirmed report dates) rather
+ * than /calendar/earnings, which was unreliable for the past side on
+ * smaller/mid-cap tickers -- it would return a populated future date but
+ * nothing for the past, which the old code silently treated as "too close
+ * to last earnings" instead of what it actually was: no past date found.
+ * Future earnings still come from /calendar/earnings, which was working
+ * correctly for that direction.
  */
 export async function checkEarningsTiming(symbol: string, exDivDate: string): Promise<EarningsTimingResult> {
   const today = new Date();
   const exDiv = new Date(exDivDate);
 
-  const from = new Date(today);
-  from.setMonth(from.getMonth() - 6);
-  const to = new Date(today);
-  to.setMonth(to.getMonth() + 6);
-
+  const futureFrom = new Date(today);
+  const futureTo = new Date(today);
+  futureTo.setMonth(futureTo.getMonth() + 6);
   const format = (d: Date) => d.toISOString().slice(0, 10);
 
   try {
-    const events = await getEarningsCalendar(symbol, format(from), format(to));
-    if (events.length === 0) {
+    const [historical, futureEvents] = await Promise.all([
+      getHistoricalEarnings(symbol),
+      getEarningsCalendar(symbol, format(futureFrom), format(futureTo)),
+    ]);
+
+    const pastDates = historical.map((e) => e.period).filter(Boolean).sort();
+    const mostRecent = pastDates.length > 0 ? pastDates[pastDates.length - 1] : null;
+
+    const futureDates = futureEvents.map((e) => e.date).filter(Boolean).sort();
+    const next = futureDates.length > 0 ? futureDates[0] : null;
+
+    if (mostRecent === null && next === null) {
       return {
         symbol,
         passesEarningsFilter: false,
@@ -57,22 +71,23 @@ export async function checkEarningsTiming(symbol: string, exDivDate: string): Pr
       };
     }
 
-    const dates = events.map((e) => e.date).filter(Boolean).sort();
-    const past = dates.filter((d) => new Date(d) <= today);
-    const future = dates.filter((d) => new Date(d) > today);
-
-    const mostRecent = past.length > 0 ? past[past.length - 1] : null;
-    const next = future.length > 0 ? future[0] : null;
-
     const recentOk = mostRecent !== null && tradingDaysBetween(new Date(mostRecent), today) >= TRADING_DAYS_BUFFER;
     const nextOk = next !== null && tradingDaysBetween(exDiv, new Date(next)) >= TRADING_DAYS_BUFFER;
 
+    let reason: string | undefined;
+    if (mostRecent === null) reason = "no past earnings date found";
+    else if (!recentOk) reason = "too close to last earnings";
+    else if (next === null) reason = "no next earnings date found";
+    else if (!nextOk) reason = "too close to next earnings";
+
     return {
       symbol,
-      passesEarningsFilter: recentOk && nextOk,
+      // If we have no past date at all, we can't confirm the recent-earnings
+      // requirement -- fail safe rather than assume it passes.
+      passesEarningsFilter: mostRecent !== null && recentOk && next !== null && nextOk,
       mostRecentEarningsDate: mostRecent,
       nextEarningsDate: next,
-      reason: !recentOk ? "too close to last earnings" : !nextOk ? "too close to next earnings" : undefined,
+      reason,
     };
   } catch {
     return {
