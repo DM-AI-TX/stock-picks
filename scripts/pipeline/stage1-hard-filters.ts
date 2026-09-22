@@ -24,10 +24,12 @@ const MIN_MARKET_CAP_MILLIONS = 2_000; // $2B. No upper bound enforced -- spec i
  *
  * Logs a count after each sub-filter so a run's console output shows
  * exactly where candidates got dropped, rather than just a final total.
- * Earnings timing additionally breaks down exclusions by reason ("no
- * earnings data" vs. too close to last/next release), since a filter this
- * aggressive could mean either the rule is doing its job or Finnhub's
- * free-tier coverage is too thin to trust -- the breakdown tells us which.
+ * Earnings timing additionally breaks down exclusions by reason, then logs
+ * each excluded ticker's actual last-earnings date next to its ex-div
+ * date -- this is what lets us eyeball whether "too close to last
+ * earnings" exclusions are a genuine pattern (near-term ex-div payers
+ * commonly reporting earnings recently) versus a bug in the trading-day
+ * math flagging dates that shouldn't be close at all.
  */
 export async function runHardFilters(): Promise<PerformanceFiltered[]> {
   const [universe, upcomingCandidates] = await Promise.all([
@@ -135,13 +137,19 @@ export async function runHardFilters(): Promise<PerformanceFiltered[]> {
     for (const [reason, count] of reasonCounts) {
       console.log(`    ${reason}: ${count}`);
     }
-    // Also list the tickers with no data at all, since that's the case
-    // most likely to indicate a coverage gap rather than a real exclusion.
-    const noDataTickers = excluded
-      .filter((s) => earningsBySymbol.get(s.ticker)?.reason === "no earnings data")
-      .map((s) => s.ticker);
-    if (noDataTickers.length > 0) {
-      console.log(`    (no earnings data for: ${noDataTickers.join(", ")})`);
+
+    // Per-ticker detail: last earnings date and ex-div date side by side,
+    // so a "too close to last earnings" exclusion can be eyeballed rather
+    // than taken on faith. Grouped by reason for readability.
+    console.log("  Phase B - earnings timing exclusion detail:");
+    for (const s of excluded) {
+      const e = earningsBySymbol.get(s.ticker);
+      console.log(
+        `    ${s.ticker}: reason=${e?.reason ?? "unknown"}` +
+          `, lastEarnings=${e?.mostRecentEarningsDate ?? "n/a"}` +
+          `, nextEarnings=${e?.nextEarningsDate ?? "n/a"}` +
+          `, exDiv=${s.exDivDate}`
+      );
     }
   }
 
