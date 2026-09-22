@@ -32,13 +32,11 @@ export interface EarningsTimingResult {
  * Most recent earnings release >=15 trading days before today, and next
  * expected release >=15 trading days after the ex-div date.
  *
- * Past earnings come from /stock/earnings (confirmed report dates) rather
- * than /calendar/earnings, which was unreliable for the past side on
- * smaller/mid-cap tickers -- it would return a populated future date but
- * nothing for the past, which the old code silently treated as "too close
- * to last earnings" instead of what it actually was: no past date found.
- * Future earnings still come from /calendar/earnings, which was working
- * correctly for that direction.
+ * Past earnings come from /stock/earnings (confirmed report dates), future
+ * earnings from /calendar/earnings -- these are two separate Finnhub calls
+ * per candidate, made sequentially (not concurrently) so the combined rate
+ * stays under the free tier's 60 calls/minute alongside the per-candidate
+ * throttle in getEarningsTimingForUniverse below.
  */
 export async function checkEarningsTiming(symbol: string, exDivDate: string): Promise<EarningsTimingResult> {
   const today = new Date();
@@ -50,10 +48,8 @@ export async function checkEarningsTiming(symbol: string, exDivDate: string): Pr
   const format = (d: Date) => d.toISOString().slice(0, 10);
 
   try {
-    const [historical, futureEvents] = await Promise.all([
-      getHistoricalEarnings(symbol),
-      getEarningsCalendar(symbol, format(futureFrom), format(futureTo)),
-    ]);
+    const historical = await getHistoricalEarnings(symbol);
+    const futureEvents = await getEarningsCalendar(symbol, format(futureFrom), format(futureTo));
 
     const pastDates = historical.map((e) => e.period).filter(Boolean).sort();
     const mostRecent = pastDates.length > 0 ? pastDates[pastDates.length - 1] : null;
@@ -106,7 +102,10 @@ export async function getEarningsTimingForUniverse(
   const results: EarningsTimingResult[] = [];
   for (const c of candidates) {
     results.push(await checkEarningsTiming(c.symbol, c.exDivDate));
-    await new Promise((resolve) => setTimeout(resolve, 1100));
+    // Two Finnhub calls happen inside checkEarningsTiming now (past +
+    // future), so this per-candidate delay is doubled from the original
+    // 1100ms to keep the combined rate under the free tier's 60/min cap.
+    await new Promise((resolve) => setTimeout(resolve, 2200));
   }
   return results;
 }
