@@ -21,6 +21,9 @@ const MIN_MARKET_CAP_MILLIONS = 2_000; // $2B. No upper bound enforced -- spec i
  * Every Phase B data point used to decide pass/fail is carried forward on
  * the returned PerformanceFiltered objects (see lib/types.ts) so Phase C
  * and the PicksTable (Phase D) can reuse it instead of refetching.
+ *
+ * Logs a count after each sub-filter so a run's console output shows
+ * exactly where candidates got dropped, rather than just a final total.
  */
 export async function runHardFilters(): Promise<PerformanceFiltered[]> {
   const [universe, upcomingCandidates] = await Promise.all([
@@ -46,6 +49,7 @@ export async function runHardFilters(): Promise<PerformanceFiltered[]> {
     });
   }
 
+  console.log(`  Phase A (exchange + ex-div window): ${phaseASurvivors.length} candidates`);
   if (phaseASurvivors.length === 0) return [];
 
   // --- Dividend frequency ---
@@ -61,6 +65,10 @@ export async function runHardFilters(): Promise<PerformanceFiltered[]> {
     return freq === "quarterly" || freq === "semi-annual" || freq === "annual";
   });
 
+  console.log(
+    `  Phase B - dividend frequency: ${afterFrequency.length}/${phaseASurvivors.length} survived` +
+      ` (dropped: ${phaseASurvivors.length - afterFrequency.length})`
+  );
   if (afterFrequency.length === 0) return [];
 
   // --- Market cap ---
@@ -72,6 +80,10 @@ export async function runHardFilters(): Promise<PerformanceFiltered[]> {
     return cap !== null && cap !== undefined && cap >= MIN_MARKET_CAP_MILLIONS;
   });
 
+  console.log(
+    `  Phase B - market cap: ${afterMarketCap.length}/${afterFrequency.length} survived` +
+      ` (dropped: ${afterFrequency.length - afterMarketCap.length})`
+  );
   if (afterMarketCap.length === 0) return [];
 
   // --- Liquidity ---
@@ -82,6 +94,10 @@ export async function runHardFilters(): Promise<PerformanceFiltered[]> {
     (s) => liquidityBySymbol.get(s.ticker)?.passesLiquidityFilter === true
   );
 
+  console.log(
+    `  Phase B - liquidity: ${afterLiquidity.length}/${afterMarketCap.length} survived` +
+      ` (dropped: ${afterMarketCap.length - afterLiquidity.length})`
+  );
   if (afterLiquidity.length === 0) return [];
 
   // --- Earnings timing ---
@@ -92,6 +108,11 @@ export async function runHardFilters(): Promise<PerformanceFiltered[]> {
 
   const finalSurvivors = afterLiquidity.filter(
     (s) => earningsBySymbol.get(s.ticker)?.passesEarningsFilter === true
+  );
+
+  console.log(
+    `  Phase B - earnings timing: ${finalSurvivors.length}/${afterLiquidity.length} survived` +
+      ` (dropped: ${afterLiquidity.length - finalSurvivors.length})`
   );
 
   // --- Assemble enriched PerformanceFiltered objects, reusing every data
