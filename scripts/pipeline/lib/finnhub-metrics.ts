@@ -28,15 +28,14 @@ function numOrNull(metric: Record<string, number>, key: string): number | null {
  * required for derived calculations (debt/EBITDA, consecutive-dividend-years,
  * dividend trend). See ways-of-working notes: Finnhub's free tier does NOT
  * expose debt/EBITDA or a dedicated dividend-history series directly --
- * both are reconstructed from these series in dividend-quality.ts and
+ * both are reconstructed from these series in dividend-quality-score.ts and
  * dividend-yield-score.ts respectively.
  *
  * NOTE ON UNITS: currentDividendYieldTTM and dividendYieldIndicatedAnnual
  * come back from Finnhub already in percentage-point units (e.g. 0.31 means
- * 0.31%), not as a 0-1 fraction. Confirmed against a live AAPL response
- * where currentDividendYieldTTM: 0.3139 matched AAPL's real ~0.3% yield.
- * Scoring thresholds in scoring-algorithm.md (>=4.5%, etc.) are applied
- * directly against this raw value -- do not multiply by 100.
+ * 0.31%), not as a 0-1 fraction. payoutRatioTTM/payoutRatioAnnual ARE plain
+ * 0-1 fractions. Confirmed against a live AAPL response. Scoring thresholds
+ * in scoring-algorithm.md are applied directly against these raw values.
  */
 export async function getFinnhubMetricsSnapshot(
   symbol: string
@@ -55,6 +54,7 @@ export async function getFinnhubMetricsSnapshot(
     currentDividendYieldTTM: numOrNull(metric, "currentDividendYieldTTM"),
     dividendYieldIndicatedAnnual: numOrNull(metric, "dividendYieldIndicatedAnnual"),
     payoutRatioTTM: numOrNull(metric, "payoutRatioTTM"),
+    payoutRatioAnnual: numOrNull(metric, "payoutRatioAnnual"),
     netInterestCoverageTTM: numOrNull(metric, "netInterestCoverageTTM"),
     forwardPE: numOrNull(metric, "forwardPE"),
     evEbitdaTTM: numOrNull(metric, "evEbitdaTTM"),
