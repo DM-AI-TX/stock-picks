@@ -39,19 +39,21 @@ export interface FinnhubSeriesPoint {
 }
 
 export interface FinnhubMetricsSnapshot {
-  // Direct fields used by Dividend Yield (factor 1) and Valuation Context (factor 4).
-  // All nullable -- free-tier coverage varies by ticker.
+  // Direct fields used by Dividend Yield (factor 1), Dividend Quality
+  // (factor 3), and Valuation Context (factor 4). All nullable -- free-tier
+  // coverage varies by ticker.
   //
   // UNIT NOTE: currentDividendYieldTTM / dividendYieldIndicatedAnnual are
   // already scaled as percentage-point numbers (0.31 means 0.31%).
-  // payoutRatioTTM is a PLAIN 0-1 FRACTION (0.1213 means 12.13%), NOT
-  // percentage-point scaled like the yield fields. Confirmed against a live
-  // AAPL response (payoutRatioTTM: 0.1213, real payout ratio ~12%). Do not
-  // apply the same scaling assumption to both -- see dividend-yield-score.ts
-  // and dividend-quality-score.ts for how each is used.
+  // payoutRatioTTM and payoutRatioAnnual are PLAIN 0-1 FRACTIONS (0.1213
+  // means 12.13%), NOT percentage-point scaled like the yield fields.
+  // Confirmed against a live AAPL response (payoutRatioTTM: 0.1213, real
+  // payout ratio ~12%). Do not apply the same scaling assumption to both --
+  // see dividend-yield-score.ts and dividend-quality-score.ts.
   currentDividendYieldTTM: number | null;
   dividendYieldIndicatedAnnual: number | null;
   payoutRatioTTM: number | null;
+  payoutRatioAnnual: number | null; // fallback when TTM is missing
   netInterestCoverageTTM: number | null;
   forwardPE: number | null;
   evEbitdaTTM: number | null;
@@ -80,6 +82,7 @@ export interface DividendQualityFactorResult {
   score: number; // 0-14
   consecutiveDividendYears: number;
   payoutRatioUsed: number | null; // raw fraction, e.g. 0.1213
+  payoutRatioSource: "payoutRatioTTM" | "payoutRatioAnnual" | "none";
   debtToEbitda: number | null; // derived: (enterpriseValue - marketCap) / most recent annual EBITDA
   interestCoverage: number | null; // netInterestCoverageTTM, passed through
   healthyBalanceSheet: boolean;
