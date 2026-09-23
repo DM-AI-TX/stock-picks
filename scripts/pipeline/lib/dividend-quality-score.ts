@@ -28,9 +28,15 @@ import type { DividendQualityFactorResult, FinnhubMetricsSnapshot, FinnhubSeries
  *   (net cash position) is treated as healthy regardless of the interest-
  *   coverage check.
  *
- * "Healthy balance sheet" itself has no threshold in the original spec --
- * this uses interestCoverage >= 5 AND debtToEbitda <= 3 (or net cash) as a
- * reasonable default. Flag to David if a different bar is wanted.
+ * "Healthy balance sheet" (revised after discussion 2026-09-23): the
+ * original spec says "a basic debt metric (debt/EBITDA OR interest
+ * coverage)" -- an "or", not a requirement for both. This now passes if
+ * EITHER metric clears its bar: interest coverage >=5x, OR debt/EBITDA
+ * <=4x (loosened from an earlier stricter 3x, since dividend-heavy sectors
+ * like utilities and REITs routinely run 4-5x leverage as a normal feature
+ * of the business model, not distress). A missing metric doesn't fail the
+ * check by itself -- only having both metrics unavailable, or both failing
+ * their bar, results in an unhealthy balance sheet.
  */
 export function scoreDividendQuality(
   metrics: FinnhubMetricsSnapshot | null
@@ -40,6 +46,7 @@ export function scoreDividendQuality(
       score: 0,
       consecutiveDividendYears: 0,
       payoutRatioUsed: null,
+      payoutRatioSource: "none",
       debtToEbitda: null,
       interestCoverage: null,
       healthyBalanceSheet: false,
@@ -47,14 +54,23 @@ export function scoreDividendQuality(
   }
 
   const consecutiveDividendYears = countConsecutiveDividendYears(metrics.annualPayoutRatio);
-  const payoutRatioUsed = metrics.payoutRatioTTM;
+
+  let payoutRatioUsed: number | null = metrics.payoutRatioTTM;
+  let payoutRatioSource: DividendQualityFactorResult["payoutRatioSource"] = "payoutRatioTTM";
+  if (payoutRatioUsed === null) {
+    payoutRatioUsed = metrics.payoutRatioAnnual;
+    payoutRatioSource = "payoutRatioAnnual";
+  }
+  if (payoutRatioUsed === null) {
+    payoutRatioSource = "none";
+  }
+
   const debtToEbitda = deriveDebtToEbitda(metrics);
   const interestCoverage = metrics.netInterestCoverageTTM;
 
-  const healthyBalanceSheet =
-    interestCoverage !== null &&
-    interestCoverage >= 5 &&
-    (debtToEbitda === null || debtToEbitda <= 3 || debtToEbitda < 0);
+  const interestCoverageHealthy = interestCoverage !== null && interestCoverage >= 5;
+  const debtToEbitdaHealthy = debtToEbitda !== null && debtToEbitda <= 4;
+  const healthyBalanceSheet = interestCoverageHealthy || debtToEbitdaHealthy;
 
   let score = 0;
   if (
@@ -84,6 +100,7 @@ export function scoreDividendQuality(
     score,
     consecutiveDividendYears,
     payoutRatioUsed,
+    payoutRatioSource,
     debtToEbitda,
     interestCoverage,
     healthyBalanceSheet,
