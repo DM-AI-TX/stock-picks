@@ -30,9 +30,8 @@ export interface PerformanceFiltered extends HardFilterSurvivor {
 }
 
 // --- Phase C: Finnhub /stock/metric snapshot, carried forward the same way
-// Phase B's liquidity/earnings data is, so later scoring factors (Valuation,
-// Dividend Quality) don't re-fetch the same metric response Dividend Yield
-// scoring already pulled.
+// Phase B's liquidity/earnings data is, so later scoring factors (Valuation)
+// don't re-fetch the same metric response Dividend Yield/Quality already pulled.
 
 export interface FinnhubSeriesPoint {
   period: string; // YYYY-MM-DD
@@ -42,6 +41,14 @@ export interface FinnhubSeriesPoint {
 export interface FinnhubMetricsSnapshot {
   // Direct fields used by Dividend Yield (factor 1) and Valuation Context (factor 4).
   // All nullable -- free-tier coverage varies by ticker.
+  //
+  // UNIT NOTE: currentDividendYieldTTM / dividendYieldIndicatedAnnual are
+  // already scaled as percentage-point numbers (0.31 means 0.31%).
+  // payoutRatioTTM is a PLAIN 0-1 FRACTION (0.1213 means 12.13%), NOT
+  // percentage-point scaled like the yield fields. Confirmed against a live
+  // AAPL response (payoutRatioTTM: 0.1213, real payout ratio ~12%). Do not
+  // apply the same scaling assumption to both -- see dividend-yield-score.ts
+  // and dividend-quality-score.ts for how each is used.
   currentDividendYieldTTM: number | null;
   dividendYieldIndicatedAnnual: number | null;
   payoutRatioTTM: number | null;
@@ -52,9 +59,10 @@ export interface FinnhubMetricsSnapshot {
   enterpriseValue: number | null; // same units as marketCapitalization (millions)
   marketCapitalization: number | null; // millions of USD
 
-  // Series data used only for derived calculations (see finnhub-metrics.ts):
-  // Dividend Yield's stability/growth bonus, and Dividend Quality's
-  // debt/EBITDA and consecutive-dividend-years reconstruction.
+  // Series data used only for derived calculations: Dividend Yield's
+  // stability/growth bonus, and Dividend Quality's debt/EBITDA and
+  // consecutive-dividend-years reconstruction (Finnhub's free tier has no
+  // dedicated dividend-history series or debt/EBITDA field in this endpoint).
   annualEbitda: FinnhubSeriesPoint[];
   annualEps: FinnhubSeriesPoint[];
   annualPayoutRatio: FinnhubSeriesPoint[];
@@ -68,11 +76,21 @@ export interface DividendYieldFactorResult {
   bonusApplied: boolean;
 }
 
+export interface DividendQualityFactorResult {
+  score: number; // 0-14
+  consecutiveDividendYears: number;
+  payoutRatioUsed: number | null; // raw fraction, e.g. 0.1213
+  debtToEbitda: number | null; // derived: (enterpriseValue - marketCap) / most recent annual EBITDA
+  interestCoverage: number | null; // netInterestCoverageTTM, passed through
+  healthyBalanceSheet: boolean;
+}
+
 export interface DividendFiltered extends PerformanceFiltered {
   dividendYield: number;
   payoutRatio: number;
   finnhubMetrics: FinnhubMetricsSnapshot;
   dividendYieldFactor: DividendYieldFactorResult;
+  dividendQualityFactor: DividendQualityFactorResult;
 }
 
 // ScoreBreakdown will grow as each of the 6 factors is implemented.
